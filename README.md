@@ -1,8 +1,32 @@
 # Telegram File Stream Bot (Cloudflare Workers)
 
 HMAC-signed HTTP Range streaming of Telegram files through Cloudflare Workers.
-The MTProto layer is [reqly](https://github.com/JamalMellouki/reqly-mtproto) —
-vendored under `vendor/reqly`, with no third-party MTProto runtime dependency.
+
+> ## Built on **reqly** — the backbone of this project
+>
+> Every Telegram operation in this worker goes through
+> **[reqly](https://github.com/JamalMellouki/reqly-mtproto)** (`reqlyproto` on
+> npm), the author's self-contained MTProto 2.0 library. It is vendored in
+> `vendor/reqly` and imported directly by `src/telegram.ts`:
+>
+> ```ts
+> import { Reqly, type RemoteDocument } from "../vendor/reqly/index"
+> ```
+>
+> There is **no `teleproto`, `gramjs`, or any other MTProto dependency** — not at
+> runtime, not at build time. This project is a real-world proof that reqly can
+> power a production streaming service on the Workers free plan.
+>
+> | reqly API used here | Role in this worker |
+> | --- | --- |
+> | `Reqly.connect(session, { dcSessions })` | Authorized client + automatic `FILE_MIGRATE_X` retry |
+> | `client.getMessages(...)` | Resolve document id / access hash / file reference |
+> | `client.getFile(...)` | 1 MB aligned, EOF-safe MTProto chunk reads |
+> | `client.getFilesParallel(...)` | Adaptive 2→4 worker pool with failure backoff |
+> | `parseSession` / `SessionStore` | Per-DC session handling |
+> | Pure-TS AES-256-IGE | Encrypted transport inside the 10 ms CPU budget |
+>
+> See `vendor/reqly/index.ts` for the exact exported surface used above.
 
 ## Features
 
