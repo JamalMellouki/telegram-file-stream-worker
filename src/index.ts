@@ -1,9 +1,13 @@
+import aesWasm from "../aes-ige.wasm"
+import { enableWasmCrypto } from "../vendor/reqly/index"
 import { verify } from "./auth"
 import { parseRange } from "./range"
 import { chunks, getClient, resolveLocation, type FileRef } from "./telegram"
 import type { Env } from "./types"
 
 export { StreamCoordinator } from "./coordinator"
+
+enableWasmCrypto(aesWasm)
 
 function json(body: unknown, status = 200): Response {
   const headers = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "*" })
