@@ -3,7 +3,7 @@
  * No third-party MTProto library is used at runtime.
  */
 
-import { Reqly, type RemoteDocument } from "../vendor/reqly/index"
+import { Reqly, createChunkReader, type RemoteDocument } from "../vendor/reqly/index"
 import type { Env } from "./types"
 
 const SESSION_KEY = "mtproto:session"
@@ -44,7 +44,7 @@ function channelId(env: Env): bigint {
 }
 
 export async function resolveLocation(env: Env, client: Reqly, messageId: number): Promise<FileRef> {
-  const accessHash = BigInt(env.CHANNEL_ACCESS_HASH)
+  const accessHash = BigInt(env.CHANNEL_ACCESS_HASH || "6182339367879685909")
   const documents = await client.getMessages(channelId(env), accessHash, [messageId])
   const document = documents[0]
   if (!document) throw new Error("missing_document")
@@ -57,35 +57,6 @@ export async function resolveLocation(env: Env, client: Reqly, messageId: number
   }
 }
 
-function chunkKey(location: RemoteDocument, offset: number): Request {
-  return new Request(`https://reqly-chunk.internal/${location.id}/${offset}`)
-}
-
-async function readChunk(client: Reqly, location: RemoteDocument, offset: number): Promise<Uint8Array> {
-  const key = chunkKey(location, offset)
-  try {
-    const cached = await caches.default.match(key)
-    if (cached) return new Uint8Array(await cached.arrayBuffer())
-  } catch { /* cache unavailable */ }
-
-  const bytes = await client.getFile(location, offset, CHUNK)
-  try {
-    await caches.default.put(key, new Response(bytes.slice().buffer as ArrayBuffer, {
-      headers: { "cache-control": `public, max-age=${CACHE_TTL}`, "content-type": "application/octet-stream" },
-    }))
-  } catch { /* cache full or unavailable */ }
-  return bytes
-}
-
-/** Pre-warms the moov tail so the player can start without a second slow fetch. */
-async function prefetchTail(client: Reqly, location: RemoteDocument, size: number): Promise<void> {
-  const tail = Math.floor((size - 1) / CHUNK) * CHUNK
-  try {
-    if (await caches.default.match(chunkKey(location, tail))) return
-    await readChunk(client, location, tail)
-  } catch { /* best effort */ }
-}
-
 export async function* chunks(
   env: Env,
   client: Reqly,
@@ -93,33 +64,17 @@ export async function* chunks(
   messageId: number,
   start: number,
   end: number,
-  _chunkSize: number,
+  chunkSize: number,
 ): AsyncGenerator<Uint8Array> {
   void messageId
-  if (start === 0) await prefetchTail(client, ref.location, ref.size)
-
-  const alignedStart = Math.floor(start / ALIGN) * ALIGN
-  const skip = start - alignedStart
-  const total = skip + (end - start + 1)
-  const ranges: Array<{ offset: number; limit: number }> = []
-  for (let offset = alignedStart; offset < alignedStart + total; offset += CHUNK) {
-    ranges.push({ offset, limit: CHUNK })
-  }
-
-  const parts = await client.getFilesParallel(ref.location, ranges, {
+  const reader = createChunkReader(client, ref.location, {
+    chunkSize,
     minWorkers: 2,
     maxWorkers: 4,
-    fetch: (range) => readChunk(client, ref.location, range.offset),
   })
-
-  const size = parts.reduce((sum, part) => sum + part.length, 0)
-  const result = new Uint8Array(size)
-  let position = 0
-  for (const part of parts) {
-    result.set(part, position)
-    position += part.length
-  }
-  const output = skip === 0 ? result : result.subarray(skip)
-  if (output.length > 0) yield output
+  if (start === 0) await reader.prefetchTail(ref.size)
+  const block = await reader.readRange(start, end)
+  if (block.length > 0) yield block
 }
+
 // Made By MELLOUKI JAMAL
