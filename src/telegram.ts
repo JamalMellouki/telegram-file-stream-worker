@@ -3,7 +3,8 @@
  * No third-party MTProto library is used at runtime.
  */
 
-import { Reqly, createChunkReader, type RemoteDocument } from "../vendor/reqly/index"
+import { Reqly, type RemoteDocument } from "../vendor/reqly/index"
+import { readRange } from "./stream"
 import type { Env } from "./types"
 
 const SESSION_KEY = "mtproto:session"
@@ -64,16 +65,10 @@ export async function* chunks(
   messageId: number,
   start: number,
   end: number,
-  chunkSize: number,
+  _chunkSize: number,
 ): AsyncGenerator<Uint8Array> {
   void messageId
-  const reader = createChunkReader(client, ref.location, {
-    chunkSize,
-    minWorkers: 2,
-    maxWorkers: 4,
-  })
-  if (start === 0) await reader.prefetchTail(ref.size)
-  const block = await reader.readRange(start, end)
+  const block = await readRange(client, ref.location, start, end)
   if (block.length > 0) yield block
 }
 
