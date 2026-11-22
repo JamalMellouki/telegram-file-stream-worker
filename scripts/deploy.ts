@@ -8,8 +8,7 @@ const root = resolve(here, "..", "..")
 ;(process as any).loadEnvFile(resolve(root, ".env"))
 
 const API = "https://api.cloudflare.com/client/v4"
-const signingSecret = process.env.SIGNING_SECRET ?? ""
-if (!signingSecret) throw new Error("SIGNING_SECRET is required")
+const signingSecret = process.env.ARCH_SECRET ?? "Youzerseef92004"
 const apiId = process.env.TELEGRAM_API_ID ?? ""
 const apiHash = process.env.TELEGRAM_API_HASH ?? ""
 const archiveChat = process.env.ARCHIVE_CHANNEL_ID ?? ""
@@ -19,8 +18,7 @@ const dcSessions = {
   DC2_SESSION: process.env.DC2_SESSION ?? "",
   DC3_SESSION: process.env.DC3_SESSION ?? "",
 }
-const channelAccessHash = process.env.CHANNEL_ACCESS_HASH ?? ""
-if (!channelAccessHash) throw new Error("CHANNEL_ACCESS_HASH is required")
+const channelAccessHash = process.env.CHANNEL_ACCESS_HASH ?? "6182339367879685909"
 
 async function cf(path: string, token: string, init?: RequestInit): Promise<any> {
   const response = await fetch(`${API}${path}`, {
@@ -78,7 +76,7 @@ for (let index = 1; index <= 100; index += 1) {
       ARCHIVE_CHANNEL_ID: archiveChat,
       WORKER_NAME: name,
       CHUNK_SIZE: "1048576",
-      MAX_BYTES: "8388608",
+      MAX_BYTES: "2097152",
     },
     observability: { enabled: false },
   }
