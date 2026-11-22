@@ -45,7 +45,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
   const range = parseRange(request.headers.get("range"), ref.size)
   if (!range) return json({ error: "invalid_range" }, 416)
 
-  const maxBytes = Math.max(65536, Math.min(8 * 1024 * 1024, Number(env.MAX_BYTES ?? "2097152")))
+  const maxBytes = Math.max(65536, Math.min(2 * 1024 * 1024, Number(env.MAX_BYTES ?? "2097152")))
   range.end = Math.min(range.end, range.start + maxBytes - 1, ref.size - 1)
   const length = range.end - range.start + 1
   const source = chunks(env, client, ref, signed.messageId, range.start, range.end, 65536)
