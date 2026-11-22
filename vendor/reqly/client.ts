@@ -10,7 +10,7 @@ import { TlWriter, TlReader, IDs, decodeFile, extractDocuments, type RemoteDocum
 import { Connection, call, MessageIds, type CallResult } from "./transport"
 import { parseSession, type Session } from "./session"
 import { SessionStore } from "./sessions"
-import { rpcError, FileMigrateError } from "./errors"
+import { rpcError, FileMigrateError, FloodWaitError } from "./errors"
 
 const INIT_CONNECTION = 0xc1cd5ea9
 const INVOKE_WITH_LAYER = 0xda9b0d0d
@@ -160,7 +160,15 @@ export class Reqly {
         this.initializedDcs.add(session.dcId)
         break
       } catch (error) {
-        if (isProtocolError(error)) throw rpcError(error.code, error.telegramMessage)
+        if (isProtocolError(error)) {
+          const structured = rpcError(error.code, error.telegramMessage)
+          if (structured instanceof FloodWaitError && structured.seconds <= 30) {
+            lastError = structured
+            await new Promise((resolve) => setTimeout(resolve, (structured.seconds + 1) * 1000))
+            continue
+          }
+          throw structured
+        }
         lastError = error
         if (!isTransportError(error)) throw error
         // A dropped socket is transparently replaced on the next attempt.
