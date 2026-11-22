@@ -10,6 +10,7 @@ export { RpcError, FileReferenceExpiredError, FileMigrateError, rpcError } from 
 export { decodeFileHashes, getFileHashes, sha256, verifyChunk, type FileHashEntry } from "./hashes"
 export { parseSession, type Session } from "./session"
 export { SessionStore } from "./sessions"
+export { ChunkReader, createChunkReader, STREAM_MB, type StreamOptions } from "./stream"
 export { TlReader, TlWriter, IDs, decodeFile, extractDocuments, type RemoteDocument } from "./tl"
 export {
   deriveKeys,
