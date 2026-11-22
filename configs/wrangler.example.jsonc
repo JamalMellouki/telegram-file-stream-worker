@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "str1",
+  "account_id": "<CLOUDFLARE_ACCOUNT_ID>",
+  "main": "../src/index.ts",
+  "compatibility_date": "2026-11-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [{ "binding": "SESSIONS", "id": "<KV_NAMESPACE_ID>" }],
+  "durable_objects": { "bindings": [{ "name": "STREAM_COORDINATOR", "class_name": "StreamCoordinator" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StreamCoordinator"] }],
+  "vars": {
+    "SIGNING_SECRET": "<SECRET>",
+    "BOT_TOKEN": "<BOT_TOKEN>",
+    "TELEGRAM_API_ID": "<API_ID>",
+    "TELEGRAM_API_HASH": "<API_HASH>",
+    "MT_SESSION": "<STRING_SESSION>",
+    "DC1_SESSION": "<DC1_SESSION>",
+    "DC2_SESSION": "<DC2_SESSION>",
+    "DC3_SESSION": "<DC3_SESSION>",
+    "CHANNEL_ACCESS_HASH": "<ACCESS_HASH>",
+    "ARCHIVE_CHANNEL_ID": "-1000000000000",
+    "WORKER_NAME": "str1",
+    "CHUNK_SIZE": "1048576",
+    "MAX_BYTES": "2097152"
+  },
+  "observability": { "enabled": false }
+}
+// Made By MELLOUKI JAMAL

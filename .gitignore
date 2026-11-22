@@ -1,0 +1,10 @@
+node_modules/
+.wrangler/
+dist/
+.env
+.env.*
+!.env.example
+deployed.json
+configs/wrangler-str*.jsonc
+*.log
+.DS_Store
