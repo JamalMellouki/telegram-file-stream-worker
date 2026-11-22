@@ -23,7 +23,12 @@ HMAC-signed HTTP Range streaming of Telegram files through Cloudflare Workers.
 > | `client.getMessages(...)` | Resolve document id / access hash / file reference |
 > | `client.getFile(...)` | 1 MB aligned, EOF-safe MTProto chunk reads |
 > | `client.getFilesParallel(...)` | Adaptive 2→4 worker pool with failure backoff |
+> | `createChunkReader(...)` | Cached, block-aligned range reads + tail prefetch |
 > | `parseSession` / `SessionStore` | Per-DC session handling |
+> | `FloodWaitError` + retry | Automatic Telegram rate-limit backoff |
+>
+> A bundled `aes-ige.wasm` is registered with `enableWasmCrypto()` at startup so
+> 1 MB MTProto chunks stay inside the Workers CPU budget.
 > | Pure-TS AES-256-IGE | Encrypted transport inside the 10 ms CPU budget |
 >
 > See `vendor/reqly/index.ts` for the exact exported surface used above.
