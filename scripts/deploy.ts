@@ -78,7 +78,7 @@ for (let index = 1; index <= 100; index += 1) {
       ARCHIVE_CHANNEL_ID: archiveChat,
       WORKER_NAME: name,
       CHUNK_SIZE: "1048576",
-      MAX_BYTES: "2097152",
+      MAX_BYTES: "8388608",
     },
     observability: { enabled: false },
   }
